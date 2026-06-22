@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="google" content="notranslate">
+    <title>Aplicativo Comunitário</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <style>
+        :root {
+            --bg-color: #f4f4f9;
+            --text-color: #333;
+            --primary: #007bff;
+            --card-bg: #fff;
+            --bottom-nav: #fff;
+        }
+        .dark-mode {
+            --bg-color: #121212;
+            --text-color: #e0e0e0;
+            --card-bg: #1e1e1e;
+            --bottom-nav: #1e1e1e;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-color); height: 100vh; display: flex; flex-direction: column; transition: 0.3s; }
+        
+        /* Sistema de Login Profissional */
+        #auth-screen { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; padding: 20px; }
+        .auth-box { background: var(--card-bg); padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; }
+        .auth-box input { width: 100%; padding: 15px; margin: 10px 0; border: 1px solid #ccc; border-radius: 8px; outline: none; }
+        .auth-box button { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .auth-box button.secondary { background: #6c757d; }
+        
+        /* App Principal */
+        #app-screen { display: none; flex: 1; overflow: hidden; flex-direction: column; }
+        .tab-content { display: none; flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 80px; }
+        .tab-content.active { display: block; }
+        
+        /* Chat Global */
+        #chat-messages { display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; }
+        .message { display: flex; align-items: flex-start; gap: 10px; background: var(--card-bg); padding: 10px; border-radius: 10px; }
+        .message img { width: 40px; height: 40px; border-radius: 50%; }
+        .tag { font-size: 0.7em; padding: 2px 5px; border-radius: 3px; color: white; font-weight: bold; margin-left: 5px; }
+        .chat-input-area { position: fixed; bottom: 60px; width: 100%; max-width: 600px; display: flex; padding: 10px; background: var(--bg-color); border-top: 1px solid #ccc; }
+        .chat-input-area input { flex: 1; padding: 10px; border-radius: 20px; border: 1px solid #ccc; outline: none; }
+        .chat-input-area button { background: var(--primary); color: white; border: none; padding: 10px 15px; border-radius: 50%; margin-left: 10px; }
+
+        /* Grupos e Amizades */
+        .search-user { display: flex; gap: 10px; margin-bottom: 20px; }
+        .search-user input { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #ccc; }
+        .btn-add { background: #28a745; color: white; border: none; padding: 10px; border-radius: 8px; }
+
+        /* Perfil */
+        .pfp-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 15px 0; }
+        .pfp-grid img { width: 100%; border-radius: 10px; cursor: pointer; border: 2px solid transparent; }
+        .pfp-grid img.selected { border-color: var(--primary); }
+        textarea { width: 100%; height: 100px; padding: 10px; border-radius: 8px; border: 1px solid #ccc; margin-top: 10px; }
+
+        /* Navegação Inferior (Mobile App Style) */
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; max-width: 600px; height: 60px; background: var(--bottom-nav); display: flex; justify-content: space-around; align-items: center; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
+        .nav-item { display: flex; flex-direction: column; align-items: center; color: #888; font-size: 0.8em; cursor: pointer; }
+        .nav-item.active { color: var(--primary); }
+        .nav-item i { font-size: 1.5em; margin-bottom: 3px; }
+
+        body { margin: 0 auto; max-width: 600px; position: relative; } /* Mobile Constraint */
+
+        /* Configurações Footer */
+        .footer-crow { text-align: center; margin-top: 50px; font-size: 0.9em; opacity: 0.7; }
+    </style>
+</head>
+<body>
+
+    <div id="auth-screen">
+        <div class="auth-box">
+            <h2><i class="fa-solid fa-shield-halved"></i> Acesso</h2>
+            <p id="auth-msg" style="color: red; font-size: 0.9em; margin-top: 10px;"></p>
+            <input type="text" id="username" placeholder="Username">
+            <input type="password" id="password" placeholder="Password">
+            <button onclick="authenticate('login')">Entrar</button>
+            <button class="secondary" onclick="authenticate('register')">Criar Conta</button>
+        </div>
+    </div>
+
+    <div id="app-screen">
+        
+        <div id="tab-chat" class="tab-content active">
+            <h2>Chat Global</h2>
+            <div id="chat-messages"></div>
+            <div class="chat-input-area">
+                <button title="Enviar Mídia"><i class="fa-solid fa-image"></i></button>
+                <input type="text" id="chat-input" placeholder="Digite sua mensagem...">
+                <button onclick="sendMessage()"><i class="fa-solid fa-paper-plane"></i></button>
+            </div>
+        </div>
+
+        <div id="tab-friends" class="tab-content">
+            <h2>Grupos e Amizades</h2>
+            <div class="search-user">
+                <input type="text" id="search-friend" placeholder="Ex: @antvkzin">
+                <button class="btn-add" onclick="addFriend()"><i class="fa-solid fa-user-plus"></i></button>
+            </div>
+            <p>Pedidos de amizade: 0</p>
+            <hr style="margin: 20px 0; border: 0.5px solid #ccc;">
+            <h3>Meus Grupos</h3>
+            <button style="padding: 10px; background: var(--primary); color: white; border: none; border-radius: 8px; margin-top: 10px;">+ Criar Novo Grupo</button>
+        </div>
+
+        <div id="tab-profile" class="tab-content">
+            <h2>Seu Perfil</h2>
+            <p>Escolha sua foto (Pasta 'Perfil'):</p>
+            <div class="pfp-grid">
+                <script>
+                    for(let i=1; i<=10; i++) {
+                        document.write(`<img src="Perfil/Perfil${i}.png" alt="PFP ${i}" onclick="selectPfp(this)">`);
+                    }
+                </script>
+            </div>
+            <h3>Sua Biografia</h3>
+            <textarea placeholder="Escreva algo sobre você..."></textarea>
+            <button style="width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 8px; margin-top: 10px;">Salvar Perfil</button>
+        </div>
+
+        <div id="tab-games" class="tab-content">
+            <h2>Central de Jogos</h2>
+            <div style="background: var(--card-bg); padding: 20px; border-radius: 10px; text-align: center; margin-top: 20px;">
+                <i class="fa-solid fa-gamepad" style="font-size: 3em; color: var(--primary);"></i>
+                <h3>Multijogador & Singleplayer</h3>
+                <p>Em breve: Biblioteca de jogos integrados.</p>
+            </div>
+        </div>
+
+        <div id="tab-settings" class="tab-content">
+            <h2>Configurações</h2>
+            
+            <div style="margin: 20px 0; display: flex; justify-content: space-between; align-items: center; background: var(--card-bg); padding: 15px; border-radius: 10px;">
+                <span>Modo Escuro</span>
+                <input type="checkbox" id="dark-mode-toggle" onchange="toggleDarkMode()" style="transform: scale(1.5);">
+            </div>
+
+            <button onclick="location.reload()" style="width: 100%; padding: 15px; background: #ffc107; color: #333; border: none; border-radius: 8px; margin-bottom: 10px; font-weight: bold;">Sair da Conta</button>
+            
+            <button onclick="deleteAccount()" style="width: 100%; padding: 15px; background: #dc3545; color: white; border: none; border-radius: 8px; font-weight: bold;">Deletar Conta</button>
+
+            <div class="footer-crow">
+                <p>Parceria com o estúdio Crow</p>
+                <p><i class="fa-brands fa-tiktok"></i> TikTok- crowst.u</p>
+            </div>
+        </div>
+
+        <div class="bottom-nav">
+            <div class="nav-item active" onclick="switchTab('chat', this)"><i class="fa-solid fa-comment"></i>Chat</div>
+            <div class="nav-item" onclick="switchTab('friends', this)"><i class="fa-solid fa-user-group"></i>Amigos</div>
+            <div class="nav-item" onclick="switchTab('profile', this)"><i class="fa-solid fa-user"></i>Perfil</div>
+            <div class="nav-item" onclick="switchTab('games', this)"><i class="fa-solid fa-gamepad"></i>Jogos</div>
+            <div class="nav-item" onclick="switchTab('settings', this)"><i class="fa-solid fa-gear"></i>Config</div>
+        </div>
+    </div>
+
+        <script>
+        // Altere esta linha abaixo:
+        const socket = io("https://seu-projeto-backend.onrender.com"); 
+        
+        let currentUser = null;
+
+            function authenticate(action) {
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
+            const msgBox = document.getElementById('auth-msg');
+
+            fetch('/auth', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: action, username: user, password: pass })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    if(action === 'login') {
+                        currentUser = data.user;
+                        document.getElementById('auth-screen').style.display = 'none';
+                        document.getElementById('app-screen').style.display = 'flex';
+                    } else {
+                        msgBox.style.color = "green";
+                        msgBox.innerText = data.message;
+                    }
+                } else {
+                    msgBox.style.color = "red";
+                    msgBox.innerText = data.message;
+                }
+            });
+        }
+
+        function switchTab(tabId, element) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.getElementById('tab-' + tabId).classList.add('active');
+            element.classList.add('active');
+        }
+
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+        }
+
+        function selectPfp(imgElement) {
+            document.querySelectorAll('.pfp-grid img').forEach(el => el.classList.remove('selected'));
+            imgElement.classList.add('selected');
+        }
+
+        // Sistema de adicionar amigos com confirmação
+        function addFriend() {
+            const user = document.getElementById('search-friend').value;
+            if(!user) return;
+            const confirmAdd = confirm(`Você tem certeza que quer adicionar essa pessoa? (${user})`);
+            if(confirmAdd) {
+                alert("Pedido de amizade enviado para " + user + "!");
+            }
+        }
+
+        function deleteAccount() {
+            const pass = prompt("Para deletar a conta, digite sua senha:");
+            if(!pass) return;
+            fetch('/delete_account', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password: pass })
+            })
+            .then(res => res.json())
+            .then(data => {
+                alert(data.message);
+                if(data.status === 'success') location.reload();
+            });
+        }
+
+        // Lógica do Chat WebSocket
+        function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const msg = input.value.trim();
+            if(msg) {
+                socket.emit('send_message', { message: msg });
+                input.value = '';
+            }
+        }
+
+        socket.on('receive_message', function(data) {
+            const chatBox = document.getElementById('chat-messages');
+            const div = document.createElement('div');
+            div.className = 'message';
+            div.innerHTML = `
+                <img src="Perfil/${data.pfp}" alt="PFP" onerror="this.src='https://via.placeholder.com/40'">
+                <div>
+                    <div>
+                        <strong>${data.username}</strong> 
+                        <span class="tag" style="background-color: ${data.color}">${data.tag}</span>
+                    </div>
+                    <div>${data.text}</div>
+                </div>
+            `;
+            chatBox.appendChild(div);
+            // Rola para baixo automaticamente
+            window.scrollTo(0, document.body.scrollHeight);
+        });
+
+        socket.on('server_message', function(data) {
+            alert("Sistema: " + data.msg);
+        });
+    </script>
+</body>
+</html>
