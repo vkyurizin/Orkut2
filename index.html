@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="google" content="notranslate">
-    <title>Aplicativo Comunitário</title>
+    <title>Orkut 2</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
     <style>
@@ -24,47 +24,39 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: var(--bg-color); color: var(--text-color); height: 100vh; display: flex; flex-direction: column; transition: 0.3s; }
         
-        /* Sistema de Login Profissional */
         #auth-screen { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; padding: 20px; }
         .auth-box { background: var(--card-bg); padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; }
         .auth-box input { width: 100%; padding: 15px; margin: 10px 0; border: 1px solid #ccc; border-radius: 8px; outline: none; }
         .auth-box button { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; }
         .auth-box button.secondary { background: #6c757d; }
         
-        /* App Principal */
         #app-screen { display: none; flex: 1; overflow: hidden; flex-direction: column; }
         .tab-content { display: none; flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 80px; }
         .tab-content.active { display: block; }
         
-        /* Chat Global */
         #chat-messages { display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; }
         .message { display: flex; align-items: flex-start; gap: 10px; background: var(--card-bg); padding: 10px; border-radius: 10px; }
-        .message img { width: 40px; height: 40px; border-radius: 50%; }
+        .message img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
         .tag { font-size: 0.7em; padding: 2px 5px; border-radius: 3px; color: white; font-weight: bold; margin-left: 5px; }
         .chat-input-area { position: fixed; bottom: 60px; width: 100%; max-width: 600px; display: flex; padding: 10px; background: var(--bg-color); border-top: 1px solid #ccc; }
         .chat-input-area input { flex: 1; padding: 10px; border-radius: 20px; border: 1px solid #ccc; outline: none; }
         .chat-input-area button { background: var(--primary); color: white; border: none; padding: 10px 15px; border-radius: 50%; margin-left: 10px; }
 
-        /* Grupos e Amizades */
         .search-user { display: flex; gap: 10px; margin-bottom: 20px; }
         .search-user input { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #ccc; }
         .btn-add { background: #28a745; color: white; border: none; padding: 10px; border-radius: 8px; }
 
-        /* Perfil */
         .pfp-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 15px 0; }
         .pfp-grid img { width: 100%; border-radius: 10px; cursor: pointer; border: 2px solid transparent; }
         .pfp-grid img.selected { border-color: var(--primary); }
         textarea { width: 100%; height: 100px; padding: 10px; border-radius: 8px; border: 1px solid #ccc; margin-top: 10px; }
 
-        /* Navegação Inferior (Mobile App Style) */
         .bottom-nav { position: fixed; bottom: 0; width: 100%; max-width: 600px; height: 60px; background: var(--bottom-nav); display: flex; justify-content: space-around; align-items: center; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
         .nav-item { display: flex; flex-direction: column; align-items: center; color: #888; font-size: 0.8em; cursor: pointer; }
         .nav-item.active { color: var(--primary); }
         .nav-item i { font-size: 1.5em; margin-bottom: 3px; }
 
-        body { margin: 0 auto; max-width: 600px; position: relative; } /* Mobile Constraint */
-
-        /* Configurações Footer */
+        body { margin: 0 auto; max-width: 600px; position: relative; }
         .footer-crow { text-align: center; margin-top: 50px; font-size: 0.9em; opacity: 0.7; }
     </style>
 </head>
@@ -82,7 +74,6 @@
     </div>
 
     <div id="app-screen">
-        
         <div id="tab-chat" class="tab-content active">
             <h2>Chat Global</h2>
             <div id="chat-messages"></div>
@@ -107,11 +98,11 @@
 
         <div id="tab-profile" class="tab-content">
             <h2>Seu Perfil</h2>
-            <p>Escolha sua foto (Pasta 'Perfil'):</p>
+            <p>Escolha sua foto:</p>
             <div class="pfp-grid">
                 <script>
                     for(let i=1; i<=10; i++) {
-                        document.write(`<img src="Perfil/Perfil${i}.png" alt="PFP ${i}" onclick="selectPfp(this)">`);
+                        document.write(`<img src="Perfil${i}.png" alt="PFP ${i}" onclick="selectPfp(this)">`);
                     }
                 </script>
             </div>
@@ -131,16 +122,12 @@
 
         <div id="tab-settings" class="tab-content">
             <h2>Configurações</h2>
-            
             <div style="margin: 20px 0; display: flex; justify-content: space-between; align-items: center; background: var(--card-bg); padding: 15px; border-radius: 10px;">
                 <span>Modo Escuro</span>
                 <input type="checkbox" id="dark-mode-toggle" onchange="toggleDarkMode()" style="transform: scale(1.5);">
             </div>
-
             <button onclick="location.reload()" style="width: 100%; padding: 15px; background: #ffc107; color: #333; border: none; border-radius: 8px; margin-bottom: 10px; font-weight: bold;">Sair da Conta</button>
-            
             <button onclick="deleteAccount()" style="width: 100%; padding: 15px; background: #dc3545; color: white; border: none; border-radius: 8px; font-weight: bold;">Deletar Conta</button>
-
             <div class="footer-crow">
                 <p>Parceria com o estúdio Crow</p>
                 <p><i class="fa-brands fa-tiktok"></i> TikTok- crowst.u</p>
@@ -156,10 +143,8 @@
         </div>
     </div>
 
-            <script>
-        // Conecta o Chat diretamente ao seu servidor do Render
+    <script>
         const socket = io("https://orkut-backend.onrender.com"); 
-        
         let currentUser = null;
 
         function authenticate(action) {
@@ -167,7 +152,6 @@
             const pass = document.getElementById('password').value;
             const msgBox = document.getElementById('auth-msg');
 
-            // Atualizado para apontar para o Render
             fetch('https://orkut-backend.onrender.com/auth', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -188,6 +172,10 @@
                     msgBox.style.color = "red";
                     msgBox.innerText = data.message;
                 }
+            })
+            .catch(err => {
+                msgBox.style.color = "red";
+                msgBox.innerText = "Erro ao conectar com o servidor.";
             });
         }
 
@@ -210,8 +198,7 @@
         function addFriend() {
             const user = document.getElementById('search-friend').value;
             if(!user) return;
-            const confirmAdd = confirm(`Você tem certeza que quer adicionar essa pessoa? (${user})`);
-            if(confirmAdd) {
+            if(confirm(`Você tem certeza que quer adicionar essa pessoa? (${user})`)) {
                 alert("Pedido de amizade enviado para " + user + "!");
             }
         }
@@ -220,11 +207,10 @@
             const pass = prompt("Para deletar a conta, digite sua senha:");
             if(!pass) return;
             
-            // Atualizado para apontar para o Render
             fetch('https://orkut-backend.onrender.com/delete_account', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ password: pass })
+                body: JSON.stringify({ password: pass, username: currentUser.username })
             })
             .then(res => res.json())
             .then(data => {
@@ -233,11 +219,14 @@
             });
         }
 
+        // --- SISTEMA DO CHAT CORRIGIDO ---
         function sendMessage() {
             const input = document.getElementById('chat-input');
             const msg = input.value.trim();
-            if(msg) {
-                socket.emit('send_message', { message: msg });
+            
+            // Agora enviamos o 'username' junto com a mensagem para o Render saber quem é!
+            if(msg && currentUser) {
+                socket.emit('send_message', { username: currentUser.username, message: msg });
                 input.value = '';
             }
         }
@@ -246,8 +235,9 @@
             const chatBox = document.getElementById('chat-messages');
             const div = document.createElement('div');
             div.className = 'message';
+            // FOTO DE PERFIL CORRIGIDA PARA PUXAR DIRETO DA RAIZ
             div.innerHTML = `
-                <img src="Perfil/${data.pfp}" alt="PFP" onerror="this.src='https://via.placeholder.com/40'">
+                <img src="${data.pfp}" alt="PFP" onerror="this.src='https://via.placeholder.com/40'">
                 <div>
                     <div>
                         <strong>${data.username}</strong> 
