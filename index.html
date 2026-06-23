@@ -156,18 +156,19 @@
         </div>
     </div>
 
-        <script>
-        // Altere esta linha abaixo:
-        const socket = io("https://seu-projeto-backend.onrender.com"); 
+            <script>
+        // Conecta o Chat diretamente ao seu servidor do Render
+        const socket = io("https://orkut-backend.onrender.com"); 
         
         let currentUser = null;
 
-            function authenticate(action) {
+        function authenticate(action) {
             const user = document.getElementById('username').value;
             const pass = document.getElementById('password').value;
             const msgBox = document.getElementById('auth-msg');
 
-            fetch('/auth', {
+            // Atualizado para apontar para o Render
+            fetch('https://orkut-backend.onrender.com/auth', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ action: action, username: user, password: pass })
@@ -206,7 +207,6 @@
             imgElement.classList.add('selected');
         }
 
-        // Sistema de adicionar amigos com confirmação
         function addFriend() {
             const user = document.getElementById('search-friend').value;
             if(!user) return;
@@ -219,7 +219,9 @@
         function deleteAccount() {
             const pass = prompt("Para deletar a conta, digite sua senha:");
             if(!pass) return;
-            fetch('/delete_account', {
+            
+            // Atualizado para apontar para o Render
+            fetch('https://orkut-backend.onrender.com/delete_account', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ password: pass })
@@ -231,7 +233,6 @@
             });
         }
 
-        // Lógica do Chat WebSocket
         function sendMessage() {
             const input = document.getElementById('chat-input');
             const msg = input.value.trim();
@@ -256,7 +257,6 @@
                 </div>
             `;
             chatBox.appendChild(div);
-            // Rola para baixo automaticamente
             window.scrollTo(0, document.body.scrollHeight);
         });
 
